@@ -102,12 +102,12 @@ app.post('/api/athletes', authenticateToken, upload.single('photo'), (req, res) 
         if (data.teams) teams = JSON.parse(data.teams);
     } catch(e) {}
     
-    const sql = `INSERT INTO athletes (first_name, last_name, dob, gender, position, status, photo_url, height, weight, reach, spike_reach, block_reach, notes, size_shirt, size_pants, size_hoodie, size_warmup) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const sql = `INSERT INTO athletes (first_name, last_name, dob, gender, position, status, photo_url, height, weight, reach, spike_reach, block_reach, notes, size_shirt, size_pants, size_hoodie, size_warmup, technical_skills, dominant_arm) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     const params = [
         data.first_name, data.last_name, data.dob, data.gender || 'F', data.position, data.status, 
         photoUrl, data.height, data.weight, data.reach, data.spike_reach, data.block_reach, data.notes,
-        data.size_shirt, data.size_pants, data.size_hoodie, data.size_warmup
+        data.size_shirt, data.size_pants, data.size_hoodie, data.size_warmup, data.technical_skills, data.dominant_arm
     ];
     
     db.run(sql, params, function(err) {
@@ -134,11 +134,11 @@ app.put('/api/athletes/:id', authenticateToken, upload.single('photo'), (req, re
         if (data.teams) teams = JSON.parse(data.teams);
     } catch(e) {}
     
-    let sql = `UPDATE athletes SET first_name=?, last_name=?, dob=?, gender=?, position=?, status=?, height=?, weight=?, reach=?, spike_reach=?, block_reach=?, notes=?, size_shirt=?, size_pants=?, size_hoodie=?, size_warmup=?`;
+    let sql = `UPDATE athletes SET first_name=?, last_name=?, dob=?, gender=?, position=?, status=?, height=?, weight=?, reach=?, spike_reach=?, block_reach=?, notes=?, size_shirt=?, size_pants=?, size_hoodie=?, size_warmup=?, technical_skills=?, dominant_arm=?`;
     let params = [
         data.first_name, data.last_name, data.dob, data.gender || 'F', data.position, data.status, 
         data.height, data.weight, data.reach, data.spike_reach, data.block_reach, data.notes,
-        data.size_shirt, data.size_pants, data.size_hoodie, data.size_warmup
+        data.size_shirt, data.size_pants, data.size_hoodie, data.size_warmup, data.technical_skills, data.dominant_arm
     ];
     
     if (req.file) {

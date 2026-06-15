@@ -278,21 +278,21 @@ INSERT INTO athletes (id, first_name, last_name, dob, position, status, photo_ur
 SELECT setval('athletes_id_seq', (SELECT MAX(id) FROM athletes));
 
 -- Data for athlete_teams
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (1, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (2, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (4, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (5, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (6, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (7, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (8, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (9, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (10, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (11, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (12, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (13, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (15, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (16, true, false, NULL);
-INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (17, true, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (1, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (2, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (4, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (5, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (6, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (7, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (8, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (9, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (10, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (11, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (12, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (13, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (15, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (16, 1, false, NULL);
+INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (17, 1, false, NULL);
 INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (34, 3, false, NULL);
 INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (35, 3, false, NULL);
 INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (36, 3, false, NULL);

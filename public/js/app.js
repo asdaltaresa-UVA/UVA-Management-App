@@ -540,9 +540,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Dati Atletici
             document.getElementById('detail-physical').innerHTML = `
+                <li><span>Altezza:</span> <strong>${a.height || '-'} cm</strong></li>
                 <li><span>Peso:</span> <strong>${a.weight || '-'} kg</strong></li>
-                <li><span>Reach a muro:</span> <strong>${a.block_reach || '-'} cm</strong></li>
-                <li><span>Reach:</span> <strong>${a.reach || '-'} cm</strong></li>
+                <li><span>Braccio:</span> <strong>${a.dominant_arm || 'Destro'}</strong></li>
+                <li><span>Reach 1 mano:</span> <strong>${a.reach || '-'} cm</strong></li>
+                <li><span>Reach 2 mani:</span> <strong>${a.spike_reach || '-'} cm</strong></li>
+                <li><span>Altezza muro:</span> <strong>${a.block_reach || '-'} cm</strong></li>
             `;
 
             // Dati Tecnici
@@ -850,6 +853,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('f-size-pants').value = athlete ? athlete.size_pants || '' : '';
         document.getElementById('f-size-hoodie').value = athlete ? athlete.size_hoodie || '' : '';
         document.getElementById('f-size-warmup').value = athlete ? athlete.size_warmup || '' : '';
+
+        // Nuovi Dati Atletici e Tecnici
+        document.getElementById('f-weight').value = athlete ? athlete.weight || '' : '';
+        document.getElementById('f-height').value = athlete ? athlete.height || '' : '';
+        document.getElementById('f-dominant-arm').value = athlete ? athlete.dominant_arm || 'Destro' : 'Destro';
+        document.getElementById('f-reach').value = athlete ? athlete.reach || '' : '';
+        document.getElementById('f-spike-reach').value = athlete ? athlete.spike_reach || '' : '';
+        document.getElementById('f-block-reach').value = athlete ? athlete.block_reach || '' : '';
+
+        const ts = athlete && athlete.technical_skills ? JSON.parse(athlete.technical_skills) : {};
+        document.getElementById('f-ts-palleggio').value = ts.palleggio || '';
+        document.getElementById('f-ts-bagher').value = ts.bagher || '';
+        document.getElementById('f-ts-battuta').value = ts.battuta || '';
+        document.getElementById('f-ts-attacco').value = ts.attacco || '';
         
         const teamsListDiv = document.getElementById('f-teams-list');
         teamsListDiv.innerHTML = state.teams.filter(t => !state.selectedClub || t.club === state.selectedClub).map(t => {
@@ -918,6 +935,18 @@ document.addEventListener('DOMContentLoaded', () => {
             size_pants: document.getElementById('f-size-pants').value,
             size_hoodie: document.getElementById('f-size-hoodie').value,
             size_warmup: document.getElementById('f-size-warmup').value,
+            weight: document.getElementById('f-weight').value,
+            height: document.getElementById('f-height').value,
+            dominant_arm: document.getElementById('f-dominant-arm').value,
+            reach: document.getElementById('f-reach').value,
+            spike_reach: document.getElementById('f-spike-reach').value,
+            block_reach: document.getElementById('f-block-reach').value,
+            technical_skills: JSON.stringify({
+                palleggio: document.getElementById('f-ts-palleggio').value,
+                bagher: document.getElementById('f-ts-bagher').value,
+                battuta: document.getElementById('f-ts-battuta').value,
+                attacco: document.getElementById('f-ts-attacco').value
+            }),
             teams: JSON.stringify(selectedTeams)
         };
         

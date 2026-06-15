@@ -147,7 +147,8 @@ function initDb() {
             size_pants TEXT,
             size_hoodie TEXT,
             size_warmup TEXT,
-            technical_skills TEXT
+            technical_skills TEXT,
+            dominant_arm TEXT DEFAULT 'Destro'
         )`);
 
         // Athlete-Teams Junction Table
