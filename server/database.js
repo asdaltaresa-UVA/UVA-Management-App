@@ -37,7 +37,9 @@ if (isPg) {
             
             let finalSql = convertSql(sql);
             if (finalSql.trim().toUpperCase().startsWith('INSERT') && !finalSql.toUpperCase().includes('RETURNING')) {
-                finalSql += ' RETURNING id';
+                if (!finalSql.includes('athlete_teams')) {
+                    finalSql += ' RETURNING id';
+                }
             }
 
             pool.query(finalSql, params, (err, res) => {

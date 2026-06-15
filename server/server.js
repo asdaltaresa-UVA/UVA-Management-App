@@ -151,7 +151,7 @@ app.put('/api/athletes/:id', authenticateToken, upload.single('photo'), (req, re
 
     let sql = `UPDATE athletes SET first_name=?, last_name=?, dob=?, gender=?, position=?, status=?, height=?, weight=?, reach=?, spike_reach=?, block_reach=?, notes=?, size_shirt=?, size_pants=?, size_hoodie=?, size_warmup=?, technical_skills=?, dominant_arm=?`;
     let params = [
-        data.first_name, data.last_name, data.dob, data.gender || 'F', data.position, data.status, 
+        data.first_name, data.last_name, data.dob, data.gender || 'F', data.position, data.status || 'Tesserato', 
         h, w, r, sr, br, data.notes,
         data.size_shirt, data.size_pants, data.size_hoodie, data.size_warmup, data.technical_skills, data.dominant_arm
     ];
