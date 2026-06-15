@@ -102,11 +102,17 @@ app.post('/api/athletes', authenticateToken, upload.single('photo'), (req, res) 
         if (data.teams) teams = JSON.parse(data.teams);
     } catch(e) {}
     
+    const h = data.height === '' ? null : data.height;
+    const w = data.weight === '' ? null : data.weight;
+    const r = data.reach === '' ? null : data.reach;
+    const sr = data.spike_reach === '' ? null : data.spike_reach;
+    const br = data.block_reach === '' ? null : data.block_reach;
+
     const sql = `INSERT INTO athletes (first_name, last_name, dob, gender, position, status, photo_url, height, weight, reach, spike_reach, block_reach, notes, size_shirt, size_pants, size_hoodie, size_warmup, technical_skills, dominant_arm) 
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     const params = [
         data.first_name, data.last_name, data.dob, data.gender || 'F', data.position, data.status, 
-        photoUrl, data.height, data.weight, data.reach, data.spike_reach, data.block_reach, data.notes,
+        photoUrl, h, w, r, sr, br, data.notes,
         data.size_shirt, data.size_pants, data.size_hoodie, data.size_warmup, data.technical_skills, data.dominant_arm
     ];
     
@@ -117,7 +123,10 @@ app.post('/api/athletes', authenticateToken, upload.single('photo'), (req, res) 
         // Insert into athlete_teams
         if (teams.length > 0) {
             const stmt = db.prepare("INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (?, ?, ?, ?)");
-            teams.forEach(t => stmt.run([athleteId, t.team_id, t.is_captain ? 1 : 0, t.jersey_number || null]));
+            teams.forEach(t => {
+                const jn = (t.jersey_number && t.jersey_number.toString().trim() !== '') ? t.jersey_number : null;
+                stmt.run([athleteId, t.team_id, t.is_captain ? 1 : 0, jn]);
+            });
             stmt.finalize();
         }
         
@@ -134,10 +143,16 @@ app.put('/api/athletes/:id', authenticateToken, upload.single('photo'), (req, re
         if (data.teams) teams = JSON.parse(data.teams);
     } catch(e) {}
     
+    const h = data.height === '' ? null : data.height;
+    const w = data.weight === '' ? null : data.weight;
+    const r = data.reach === '' ? null : data.reach;
+    const sr = data.spike_reach === '' ? null : data.spike_reach;
+    const br = data.block_reach === '' ? null : data.block_reach;
+
     let sql = `UPDATE athletes SET first_name=?, last_name=?, dob=?, gender=?, position=?, status=?, height=?, weight=?, reach=?, spike_reach=?, block_reach=?, notes=?, size_shirt=?, size_pants=?, size_hoodie=?, size_warmup=?, technical_skills=?, dominant_arm=?`;
     let params = [
         data.first_name, data.last_name, data.dob, data.gender || 'F', data.position, data.status, 
-        data.height, data.weight, data.reach, data.spike_reach, data.block_reach, data.notes,
+        h, w, r, sr, br, data.notes,
         data.size_shirt, data.size_pants, data.size_hoodie, data.size_warmup, data.technical_skills, data.dominant_arm
     ];
     
@@ -158,7 +173,10 @@ app.put('/api/athletes/:id', authenticateToken, upload.single('photo'), (req, re
             
             if (teams.length > 0) {
                 const stmt = db.prepare("INSERT INTO athlete_teams (athlete_id, team_id, is_captain, jersey_number) VALUES (?, ?, ?, ?)");
-                teams.forEach(t => stmt.run([athleteId, t.team_id, t.is_captain ? 1 : 0, t.jersey_number || null]));
+                teams.forEach(t => {
+                    const jn = (t.jersey_number && t.jersey_number.toString().trim() !== '') ? t.jersey_number : null;
+                    stmt.run([athleteId, t.team_id, t.is_captain ? 1 : 0, jn]);
+                });
                 stmt.finalize();
             }
             res.json({ success: true, changes: this.changes });
