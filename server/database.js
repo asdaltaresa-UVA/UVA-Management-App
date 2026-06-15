@@ -100,7 +100,8 @@ function initDb() {
             { username: 'isacco', password: 'AltaResa2026!', fullname: 'Isacco' },
             { username: 'andrea', password: 'AltaResa2026!', fullname: 'Andrea' },
             { username: 'marco', password: 'AltaResa2026!', fullname: 'Marco' },
-            { username: 'valentino', password: 'AltaResa2026!', fullname: 'Valentino' }
+            { username: 'valentino', password: 'AltaResa2026!', fullname: 'Valentino' },
+            { username: 'danila', password: 'AltaResa2026!', fullname: 'Danila' }
         ];
         
         let insertUser;
