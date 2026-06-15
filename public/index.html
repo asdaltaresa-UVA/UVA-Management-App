@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Union Volley Academy - Hub</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- SheetJS (Excel Export) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container" style="display: none; height: 100vh; align-items: center; justify-content: center; background: url('images/login-bg.jpg') center/cover;">
+        <div style="background: rgba(26, 26, 46, 0.95); padding: 40px; border-radius: 10px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center;">
+            <h1 style="color: var(--primary-color); margin-bottom: 20px;">UVA Management</h1>
+            <p style="color: #aaa; margin-bottom: 30px;">Accedi per gestire la società</p>
+            <form id="form-login">
+                <input type="text" id="login-username" class="form-control" placeholder="Nome utente (es. isacco)" style="margin-bottom: 15px;" required>
+                <input type="password" id="login-password" class="form-control" placeholder="Password" style="margin-bottom: 20px;" required>
+                <div id="login-error" style="color: #ff5252; margin-bottom: 15px; font-size: 14px;"></div>
+                <button type="submit" class="btn btn-primary w-100">Accedi</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="app-screen" style="display: none; height: 100vh;">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="main-sidebar" style="display: none;">
+            <div class="sidebar-header">
+                <h2 id="sidebar-club-name" style="margin-bottom: 0;">CLUB</h2>
+                <button class="btn btn-sm btn-link" id="btn-back-hub" style="color:#aaa; font-size:12px; margin-top:5px; padding:0;"><i class="fas fa-home"></i> Torna alla Hub</button>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#" class="nav-item active" data-target="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="#" class="nav-item" data-target="teams"><i class="fas fa-users"></i> Squadre</a></li>
+                <li><a href="#" class="nav-item" data-target="athletes"><i class="fas fa-running"></i> Atleti</a></li>
+                <li><a href="#" class="nav-item" data-target="coaches"><i class="fas fa-user-tie"></i> Allenatori</a></li>
+                <li><a href="#" class="nav-item" data-target="scouting"><i class="fas fa-eye"></i> Osservatorio</a></li>
+                <li><a href="#" class="nav-item" data-target="news"><i class="fas fa-newspaper"></i> News & Social</a></li>
+                <li><a href="#" class="nav-item" data-target="settings"><i class="fas fa-cog"></i> Impostazioni</a></li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar"><i class="fas fa-user-circle"></i></div>
+                    <div class="user-details">
+                        <span id="current-user-name">Allenatore</span>
+                        <a href="#" id="btn-logout">Esci</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header">
+                <h1 id="page-title">UVA Management App</h1>
+            </header>
+
+            <!-- Views Container -->
+            <div class="views-container">
+                
+                <!-- Hub Selection View -->
+                <div id="view-hub" class="view active">
+                    <div style="text-align: center; margin-bottom: 40px; margin-top: 20px;">
+                        <h1 style="font-size: 3rem; color: var(--primary-color);">UNION VOLLEY ACADEMY</h1>
+                        <p style="color: #aaa; font-size: 1.2rem;">Seleziona la società per accedere all'area gestionale</p>
+                    </div>
+                    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 30px; max-width: 900px; margin: 0 auto;">
+                        <div class="card text-center club-btn" data-club="Alta Resa" style="cursor: pointer; padding: 20px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; height: 300px;">
+                            <img src="images/alta_resa.png" alt="Alta Resa" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        </div>
+                        <div class="card text-center club-btn" data-club="Blu Volley PN" style="cursor: pointer; padding: 20px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; height: 300px;">
+                            <img src="images/blu_volley.png" alt="Blu Volley" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        </div>
+                        <div class="card text-center club-btn" data-club="Roveredo" style="cursor: pointer; padding: 20px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; height: 300px;">
+                            <img src="images/roveredo.png" alt="Roveredo" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        </div>
+                        <div class="card text-center club-btn" data-club="San Quirino" style="cursor: pointer; padding: 20px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; height: 300px;">
+                            <img src="images/san_quirino.jpg" alt="San Quirino" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard (Club Specific) -->
+                <div id="view-dashboard" class="view">
+                    <div class="stats-cards" style="position: relative;">
+                        <button id="btn-full-backup" class="btn btn-secondary" style="position: absolute; right: 0; top: -50px;"><i class="fas fa-download"></i> Backup Completo DB</button>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-users"></i></div>
+                            <div class="stat-data">
+                                <h3>Totale Atleti</h3>
+                                <p id="stat-total-athletes">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-shield-alt"></i></div>
+                            <div class="stat-data">
+                                <h3>Squadre Attive</h3>
+                                <p id="stat-total-teams">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
+                            <div class="stat-data">
+                                <h3>Valutazione Media</h3>
+                                <p id="stat-avg-rating">0.0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-grid">
+                        <div class="card chart-card" style="grid-column: 1 / -1;">
+                            <h2>Rendimento Squadre (Medie Roster)</h2>
+                            <div id="dashboard-teams-radars" class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 15px;">
+                                <!-- Radars injected here -->
+                            </div>
+                        </div>
+                        <div class="card news-card">
+                            <h2>Ultime News</h2>
+                            <div id="dashboard-news-list" class="news-list">
+                                <!-- News injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Athletes View -->
+                <div id="view-athletes" class="view">
+                    <div class="action-bar">
+                        <div class="filters">
+                            <select id="filter-team" class="form-select">
+                                <option value="">Tutte le Squadre</option>
+                            </select>
+                            <select id="filter-gender" class="form-select">
+                                <option value="">Tutti (M/F)</option>
+                                <option value="F">Femmine (F)</option>
+                                <option value="M">Maschi (M)</option>
+                            </select>
+                            <input type="text" id="search-athlete" placeholder="Cerca atleta..." class="form-input">
+                        </div>
+                        <div class="actions">
+                            <button id="btn-import-athletes" class="btn btn-secondary" onclick="document.getElementById('import-file').click()"><i class="fas fa-file-import"></i> Importa</button>
+                            <input type="file" id="import-file" style="display:none" accept=".csv">
+                            <button id="btn-export-athletes" class="btn btn-secondary"><i class="fas fa-file-excel"></i> Esporta Excel</button>
+                            <button id="btn-add-athlete" class="btn btn-primary"><i class="fas fa-plus"></i> Nuovo Atleta</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card table-card">
+                        <table id="athletes-table" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable-header" data-sort="last_name" style="cursor:pointer;">Cognome <i class="fas fa-sort"></i></th>
+                                    <th class="sortable-header" data-sort="first_name" style="cursor:pointer;">Nome <i class="fas fa-sort"></i></th>
+                                    <th class="sortable-header" data-sort="gender" style="cursor:pointer;">M/F <i class="fas fa-sort"></i></th>
+                                    <th class="sortable-header" data-sort="dob" style="cursor:pointer;">Anno <i class="fas fa-sort"></i></th>
+                                    <th class="sortable-header" data-sort="position" style="cursor:pointer;">Ruolo <i class="fas fa-sort"></i></th>
+                                    <th>Squadre</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="athletes-tbody">
+                                <!-- Data injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Coaches View -->
+                <div id="view-coaches" class="view">
+                    <div class="action-bar">
+                        <div class="filters">
+                            <select id="filter-coach-team" class="form-select">
+                                <option value="">Tutte le Squadre</option>
+                            </select>
+                            <input type="text" id="search-coach" placeholder="Cerca allenatore..." class="form-input">
+                        </div>
+                        <div class="actions">
+                            <button id="btn-add-coach" class="btn btn-primary"><i class="fas fa-plus"></i> Nuovo Allenatore</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card table-card">
+                        <table id="coaches-table" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable-coach-header" data-sort="last_name" style="cursor:pointer;">Cognome <i class="fas fa-sort"></i></th>
+                                    <th class="sortable-coach-header" data-sort="first_name" style="cursor:pointer;">Nome <i class="fas fa-sort"></i></th>
+                                    <th class="sortable-coach-header" data-sort="dob_year" style="cursor:pointer;">Anno <i class="fas fa-sort"></i></th>
+                                    <th class="sortable-coach-header" data-sort="level" style="cursor:pointer;">Livello <i class="fas fa-sort"></i></th>
+                                    <th>Squadre</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="coaches-tbody">
+                                <!-- Data injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Athlete Detail View (Transfermarkt style) -->
+                <div id="view-athlete-detail" class="view">
+                    <div class="action-bar" style="background: transparent; padding: 0; margin-bottom: 20px;">
+                        <button id="btn-back-athletes" class="btn btn-link"><i class="fas fa-arrow-left"></i> Torna alla lista</button>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <select id="filter-athlete-season" class="input-modern" style="width:150px; background:#1a1a2e;">
+                                <option value="all">Tutte le Stagioni</option>
+                                <option value="2023/2024">2023/2024</option>
+                                <option value="2024/2025" selected>2024/2025</option>
+                            </select>
+                            <button id="btn-edit-athlete" class="btn btn-secondary btn-sm"><i class="fas fa-pencil-alt"></i> Modifica</button>
+                            <button id="btn-delete-athlete" class="btn btn-secondary btn-sm" style="background-color: #d32f2f;"><i class="fas fa-trash"></i> Elimina</button>
+                        </div>
+                    </div>
+                    
+                    <div class="athlete-profile">
+                        <div class="profile-header card">
+                            <div class="profile-photo">
+                                <img id="detail-photo" src="images/default-avatar.png" alt="Foto">
+                            </div>
+                            <div class="profile-info">
+                                <h2 id="detail-name">Nome Cognome</h2>
+                                <div class="tags">
+                                    <span class="tag" id="detail-team">Squadra</span>
+                                    <span class="tag tag-green" id="detail-role">Ruolo</span>
+                                </div>
+                                <div class="profile-stats">
+                                    <div class="p-stat"><span>Età:</span> <strong id="detail-age">-</strong></div>
+                                    <div class="p-stat"><span>Altezza:</span> <strong id="detail-height">-</strong></div>
+                                    <div class="p-stat"><span>Elevazione (Calcolata):</span> <strong id="detail-elev">- cm</strong></div>
+                                </div>
+                            </div>
+                        
+                        <!-- Clothing Sizes -->
+                        <div class="card mt-10">
+                            <h3>Taglie Abbigliamento</h3>
+                            <div id="detail-sizes" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                                <!-- Sizes rendered via JS -->
+                            </div>
+                        </div>
+                    </div>
+                        
+                        <div class="profile-body" style="grid-template-columns: 1fr 1fr 1fr;">
+                            <div class="card">
+                                <h3>Dati Atletici</h3>
+                                <ul class="data-list" id="detail-physical">
+                                    <!-- Physical data injected here -->
+                                </ul>
+                            </div>
+                            
+                            <div class="card">
+                                <h3>Dati Tecnici</h3>
+                                <ul class="data-list" id="detail-technical">
+                                    <!-- Technical data injected here -->
+                                </ul>
+                            </div>
+
+                            <div class="card">
+                                <h3>Scout (Radar)</h3>
+                                <div class="radar-container">
+                                    <canvas id="athleteRadarChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-20">
+                            <div class="card-header-flex">
+                                <h3>Storico Prestazioni</h3>
+                                <button class="btn btn-sm btn-primary" id="btn-add-performance">Aggiungi Prestazione</button>
+                            </div>
+                            <table class="data-table mt-10">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Partita</th>
+                                        <th>Voto</th>
+                                        <th>Punti</th>
+                                        <th>Note</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail-performances">
+                                    <!-- Performances -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teams List -->
+                <div id="view-teams" class="view">
+                    <div class="action-bar">
+                        <button class="btn btn-primary" id="btn-add-team"><i class="fas fa-plus"></i> Nuova Squadra</button>
+                    </div>
+                    <div class="grid" id="teams-grid" style="grid-template-columns: 1fr 1fr;">
+                        <!-- Cards Squadre -->
+                    </div>
+                </div>
+
+                <!-- Team Detail & Court View -->
+                <div id="view-team-detail" class="view">
+                    <div class="action-bar" style="background: transparent; padding: 0; margin-bottom: 20px;">
+                        <button id="btn-back-teams" class="btn btn-link"><i class="fas fa-arrow-left"></i> Torna alle squadre</button>
+                        <button id="btn-edit-team-detail" class="btn btn-secondary btn-sm"><i class="fas fa-pencil-alt"></i> Modifica Squadra</button>
+                    </div>
+                    
+                    <div class="team-header card text-center">
+                        <h2 id="team-detail-name" style="margin: 0; color: var(--primary-color);"></h2>
+                        <p style="margin: 5px 0 0 0; color: #aaa;">Allenatore: <strong id="team-detail-coach"></strong> | Dirigente: <strong id="team-detail-manager"></strong></p>
+                    </div>
+
+                    <div class="grid" style="grid-template-columns: 1fr 1fr; margin-top: 20px;">
+                        <div class="card text-center" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <h3>Rendimento Medio Squadra</h3>
+                            <div style="width: 100%; max-width: 300px; margin: 0 auto;">
+                                <canvas id="teamRadarChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card text-center" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <h3>Rendimento Sestetto Ideale</h3>
+                            <div style="width: 100%; max-width: 300px; margin: 0 auto;">
+                                <canvas id="startingSixRadarChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid" style="grid-template-columns: 1fr 1fr; margin-top: 20px;">
+                        <!-- Roster Table -->
+                        <div class="card">
+                            <h3>Roster</h3>
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead><tr><th>N°</th><th>Atleta</th><th>Ruolo</th><th>Anno</th><th>Azioni</th></tr></thead>
+                                    <tbody id="team-detail-roster"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Volley Court (6+1) -->
+                        <div class="card">
+                            <h3>Sestetto Ideale</h3>
+                            <button id="btn-save-formation" class="btn btn-primary btn-sm" style="float:right; margin-top:-35px;">Salva Formazione</button>
+                            <div class="volley-court" style="position: relative; width: 100%; height: 400px; background: #d08770; border: 3px solid white; border-radius: 5px; margin-top: 15px; overflow: hidden;">
+                                <!-- 3-meter line -->
+                                <div style="position: absolute; top: 33%; left: 0; width: 100%; height: 2px; background: white;"></div>
+                                
+                                <style>
+                                    .court-pos { position: absolute; width: 100px; height: 80px; transform: translate(-50%, -50%); text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;}
+                                    .court-pos input { width: 60px; height: 40px; border-radius: 8px; border: 2px solid var(--primary-color); background: #1a1a2e; color: white; text-align: center; font-weight: bold; font-size: 20px; margin-bottom: 5px; }
+                                    /* Hide arrows from number input */
+                                    .court-pos input::-webkit-outer-spin-button,
+                                    .court-pos input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+                                    .court-pos input[type=number] { -moz-appearance: textfield; }
+                                    .court-pos span { display: block; color: white; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px black; white-space: nowrap;}
+                                    .court-pos .athlete-name { font-size: 11px; color: #fff; background: rgba(0,0,0,0.5); padding: 2px 5px; border-radius: 4px; margin-top:2px; min-height: 18px; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+                                </style>
+                                
+                                <!-- Front row -->
+                                <div class="court-pos" style="top: 16%; left: 20%;"><input type="number" class="court-input" data-pos="p4" placeholder="4"><span>P4</span><div class="athlete-name"></div></div>
+                                <div class="court-pos" style="top: 16%; left: 50%;"><input type="number" class="court-input" data-pos="p3" placeholder="3"><span>P3</span><div class="athlete-name"></div></div>
+                                <div class="court-pos" style="top: 16%; left: 80%;"><input type="number" class="court-input" data-pos="p2" placeholder="2"><span>P2</span><div class="athlete-name"></div></div>
+                                
+                                <!-- Back row -->
+                                <div class="court-pos" style="top: 66%; left: 20%;"><input type="number" class="court-input" data-pos="p5" placeholder="5"><span>P5</span><div class="athlete-name"></div></div>
+                                <div class="court-pos" style="top: 66%; left: 50%;"><input type="number" class="court-input" data-pos="p6" placeholder="6"><span>P6</span><div class="athlete-name"></div></div>
+                                <div class="court-pos" style="top: 66%; left: 80%;"><input type="number" class="court-input" data-pos="p1" placeholder="1"><span>P1</span><div class="athlete-name"></div></div>
+                                
+                                <!-- Libero -->
+                                <div class="court-pos" style="top: 92%; left: 50%;"><input type="number" class="court-input" data-pos="l" placeholder="L" style="border-color: #ffb86c;"><span>LIBERO</span><div class="athlete-name"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scouting View -->
+                <div id="view-scouting" class="view">
+                    <div class="action-bar">
+                        <div class="filters" style="display:flex; gap:10px; width: 100%;">
+                            <input type="text" id="search-scouting" class="form-control" placeholder="Cerca Atleta Osservato..." style="flex:1;">
+                        </div>
+                        <button class="btn btn-secondary" id="btn-open-dream-team" style="background:#00d26a; border:none; margin-right:10px;"><i class="fas fa-star"></i> Dream Team</button>
+                        <button class="btn btn-primary" id="btn-add-scouting"><i class="fas fa-plus"></i> Nuovo Atleta</button>
+                    </div>
+                    <div class="table-responsive mt-20">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Cognome</th>
+                                    <th>Nome</th>
+                                    <th>Anno</th>
+                                    <th>Ruolo</th>
+                                    <th>Società (Gioca)</th>
+                                    <th>Società (Cartellino)</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scouting-tbody">
+                                <!-- JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Dream Team View -->
+                <div id="view-dream-team" class="view">
+                    <div class="action-bar" style="background: transparent; padding: 0; margin-bottom: 20px;">
+                        <button id="btn-back-from-dream-team" class="btn btn-link"><i class="fas fa-arrow-left"></i> Torna all'Osservatorio</button>
+                        <button class="btn btn-secondary btn-sm" id="btn-clear-dream-team"><i class="fas fa-trash"></i> Svuota Formazione</button>
+                    </div>
+                    
+                    <div class="team-header card text-center">
+                        <h2 style="margin: 0; color: var(--primary-color);"><i class="fas fa-star"></i> Simulatore Formazione Ideale Globale</h2>
+                        <p style="margin: 5px 0 0 0; color: #aaa;">Seleziona i giocatori per simulare la squadra migliore.</p>
+                    </div>
+
+                    <div class="grid" style="grid-template-columns: 1fr 1fr; margin-top: 20px;">
+                        <div class="card text-center" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <h3>Rendimento Dream Team</h3>
+                            <div style="width: 100%; max-width: 300px; margin: 0 auto;">
+                                <canvas id="dreamTeamRadarChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Volley Court (6+1) -->
+                        <div class="card">
+                            <h3>Schieramento</h3>
+                            <div class="court-container" style="position: relative; width: 100%; max-width: 400px; height: 500px; background: #d08770; border: 3px solid white; border-radius: 5px; margin: 0 auto; overflow: hidden;">
+                                <!-- 3-meter line -->
+                                <div style="position: absolute; top: 33%; left: 0; width: 100%; height: 2px; background: white;"></div>
+                                <style>
+                                    .dt-court-pos { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.2s; }
+                                    .dt-court-pos:hover { transform: translate(-50%, -50%) scale(1.1); }
+                                    .dt-court-pos .dt-avatar { width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--primary-color); background: #1a1a2e; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+                                    .dt-court-pos .dt-avatar img { width: 100%; height: 100%; object-fit: cover; }
+                                    .dt-court-pos .dt-avatar i { font-size: 24px; color: var(--primary-color); }
+                                    .dt-court-pos span { font-size: 14px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; margin-top: 5px; }
+                                    .dt-court-pos .athlete-name { font-size: 11px; color: #fff; background: rgba(0,0,0,0.7); padding: 2px 5px; border-radius: 4px; margin-top:2px; min-height: 18px; width: max-content; white-space: nowrap;}
+                                </style>
+                                
+                                <!-- Front row -->
+                                <div class="dt-court-pos" data-dt-pos="p4" style="top: 16%; left: 20%;">
+                                    <div class="dt-avatar"><i class="fas fa-user-plus"></i></div>
+                                    <span>P4</span><div class="athlete-name">Vuoto</div>
+                                </div>
+                                <div class="dt-court-pos" data-dt-pos="p3" style="top: 16%; left: 50%;">
+                                    <div class="dt-avatar"><i class="fas fa-user-plus"></i></div>
+                                    <span>P3</span><div class="athlete-name">Vuoto</div>
+                                </div>
+                                <div class="dt-court-pos" data-dt-pos="p2" style="top: 16%; left: 80%;">
+                                    <div class="dt-avatar"><i class="fas fa-user-plus"></i></div>
+                                    <span>P2</span><div class="athlete-name">Vuoto</div>
+                                </div>
+                                
+                                <!-- Back row -->
+                                <div class="dt-court-pos" data-dt-pos="p5" style="top: 66%; left: 20%;">
+                                    <div class="dt-avatar"><i class="fas fa-user-plus"></i></div>
+                                    <span>P5</span><div class="athlete-name">Vuoto</div>
+                                </div>
+                                <div class="dt-court-pos" data-dt-pos="p6" style="top: 66%; left: 50%;">
+                                    <div class="dt-avatar"><i class="fas fa-user-plus"></i></div>
+                                    <span>P6</span><div class="athlete-name">Vuoto</div>
+                                </div>
+                                <div class="dt-court-pos" data-dt-pos="p1" style="top: 66%; left: 80%;">
+                                    <div class="dt-avatar"><i class="fas fa-user-plus"></i></div>
+                                    <span>P1</span><div class="athlete-name">Vuoto</div>
+                                </div>
+                                
+                                <!-- Libero -->
+                                <div class="dt-court-pos" data-dt-pos="l" style="top: 92%; left: 50%;">
+                                    <div class="dt-avatar" style="border-color: #ffb86c;"><i class="fas fa-user-plus" style="color: #ffb86c;"></i></div>
+                                    <span style="color: #ffb86c;">LIBERO</span><div class="athlete-name">Vuoto</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- News View -->
+                <div id="view-news" class="view">
+                    <div class="action-bar">
+                        <h2>Bacheca Social & News</h2>
+                        <button class="btn btn-primary" id="btn-add-news"><i class="fas fa-plus"></i> Scrivi Post</button>
+                    </div>
+                    <div class="news-feed" id="news-feed-container">
+                        <!-- Feed -->
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Athlete Form Modal -->
+    <div id="modal-athlete" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-athlete-title">Nuovo Atleta</h3>
+                <span class="close-modal" id="close-athlete-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-athlete">
+                    <input type="hidden" id="f-athlete-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome</label>
+                            <input type="text" id="f-first-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Cognome</label>
+                            <input type="text" id="f-last-name" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ruolo</label>
+                            <input type="text" id="f-position" placeholder="Es. Banda, Centrale...">
+                        </div>
+                        <div class="form-group">
+                            <label>Data di Nascita</label>
+                            <input type="date" id="f-dob">
+                        </div>
+                        <div class="form-group">
+                            <label>Genere</label>
+                            <select id="f-gender" class="form-select">
+                                <option value="F">Femmina (F)</option>
+                                <option value="M">Maschio (M)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Maglia Gara</label>
+                            <select id="f-size-shirt" class="form-select"><option value="">-</option><option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Pantaloncino</label>
+                            <select id="f-size-pants" class="form-select"><option value="">-</option><option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Felpa</label>
+                            <select id="f-size-hoodie" class="form-select"><option value="">-</option><option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Maglia Riscald.</label>
+                            <select id="f-size-warmup" class="form-select"><option value="">-</option><option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option></select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Squadre e Numeri di Maglia</label>
+                        <div id="f-teams-list" style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto;">
+                            <!-- Checkbox squadre generate via JS -->
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="btn-save-athlete">Salva</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Form Modal -->
+    <div id="modal-team" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-team-title">Nuova Squadra</h3>
+                <span class="close-modal" id="close-team-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-team">
+                    <input type="hidden" id="f-team-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome Squadra</label>
+                            <input type="text" id="f-team-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Categoria</label>
+                            <select id="f-team-category" class="form-select">
+                                <option value="S3">S3</option>
+                                <option value="U12">U12</option>
+                                <option value="U13">U13</option>
+                                <option value="U14">U14</option>
+                                <option value="U15">U15</option>
+                                <option value="U16">U16</option>
+                                <option value="U17">U17</option>
+                                <option value="U18">U18</option>
+                                <option value="U19">U19</option>
+                                <option value="1DF">1DF</option>
+                                <option value="2DF">2DF</option>
+                                <option value="Serie D">Serie D</option>
+                                <option value="Serie C">Serie C</option>
+                                <option value="Altro">Altro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Allenatore (Testo per ora)</label>
+                            <input type="text" id="f-team-coach" placeholder="Nome Allenatore">
+                        </div>
+                        <div class="form-group">
+                            <label>Dirigente</label>
+                            <input type="text" id="f-team-manager">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="btn-save-team">Salva Squadra</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coach Form Modal -->
+    <div id="modal-coach" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-coach-title">Nuovo Allenatore</h3>
+                <span class="close-modal" id="close-coach-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-coach">
+                    <input type="hidden" id="f-coach-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome</label>
+                            <input type="text" id="f-coach-first-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Cognome</label>
+                            <input type="text" id="f-coach-last-name" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Livello (Allievo, 1° Grado, etc.)</label>
+                            <input type="text" id="f-coach-level">
+                        </div>
+                        <div class="form-group">
+                            <label>Anno di nascita</label>
+                            <input type="number" id="f-coach-dob-year" placeholder="Es. 1980">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="btn-save-coach">Salva Allenatore</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scouting Form Modal -->
+    <div id="modal-scouting" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="modal-scouting-title">Scheda Scout Atleta</h3>
+                <span class="close-modal" id="close-scouting-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-scouting">
+                    <input type="hidden" id="fs-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome</label>
+                            <input type="text" id="fs-first-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Cognome</label>
+                            <input type="text" id="fs-last-name" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ruolo</label>
+                            <input type="text" id="fs-position">
+                        </div>
+                        <div class="form-group">
+                            <label>Anno di Nascita</label>
+                            <input type="number" id="fs-dob-year">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Società in cui gioca</label>
+                            <input type="text" id="fs-current-club">
+                        </div>
+                        <div class="form-group">
+                            <label>Società titolare cartellino</label>
+                            <input type="text" id="fs-owned-club">
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-top:20px; margin-bottom:10px; color:var(--primary-color);">Dati Fisici e Tecnici</h4>
+                    <div class="form-row">
+                        <div class="form-group"><label>Altezza (cm)</label><input type="number" id="fs-height"></div>
+                        <div class="form-group"><label>Peso (kg)</label><input type="number" id="fs-weight"></div>
+                        <div class="form-group"><label>Reach (cm)</label><input type="number" id="fs-reach"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Reach Attacco (cm)</label><input type="number" id="fs-spike-reach"></div>
+                        <div class="form-group"><label>Reach Muro (cm)</label><input type="number" id="fs-block-reach"></div>
+                        <div class="form-group"><label>Valutazione Tecnica (1-10)</label><input type="number" id="fs-technical-skills"></div>
+                    </div>
+
+                    <div class="form-group" style="margin-top:10px;">
+                        <label>Note / Commenti Scout</label>
+                        <textarea id="fs-notes" rows="4" style="width:100%; border-radius:5px; border:1px solid #444; background:var(--surface-color); color:#fff; padding:10px;"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100" id="btn-save-scouting">Salva Scheda</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Selector Modal (For Dream Team) -->
+    <div id="modal-player-selector" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 style="margin:0;"><i class="fas fa-search"></i> Cerca Atleta</h3>
+                <span class="close-modal" id="close-player-selector">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 10px;">
+                <input type="text" id="input-player-search" class="form-control" placeholder="Inizia a digitare un nome..." style="width: 100%; margin-bottom: 15px; padding: 10px; font-size: 16px;">
+                <div id="player-selector-list" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                    <!-- JS will populate this -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include JS -->
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
