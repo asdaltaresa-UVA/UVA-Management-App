@@ -118,6 +118,17 @@ function initDb() {
         });
         insertUser.finalize();
 
+        // Clubs Table
+        db.run(`CREATE TABLE IF NOT EXISTS clubs (
+            id ${serialStr},
+            name TEXT UNIQUE NOT NULL,
+            address TEXT,
+            city TEXT,
+            vat TEXT,
+            cf TEXT,
+            president TEXT
+        )`);
+
         // Teams Table
         db.run(`CREATE TABLE IF NOT EXISTS teams (
             id ${serialStr},
@@ -126,6 +137,7 @@ function initDb() {
             club TEXT,
             coach TEXT,
             manager TEXT,
+            scorer TEXT,
             starting_six TEXT
         )`);
 
@@ -150,7 +162,9 @@ function initDb() {
             size_hoodie TEXT,
             size_warmup TEXT,
             technical_skills TEXT,
-            dominant_arm TEXT DEFAULT 'Destro'
+            dominant_arm TEXT DEFAULT 'Destro',
+            cf TEXT,
+            med_cert_expiry DATE
         )`);
 
         // Athlete-Teams Junction Table
@@ -169,8 +183,11 @@ function initDb() {
             id ${serialStr},
             first_name TEXT NOT NULL,
             last_name TEXT NOT NULL,
+            role TEXT DEFAULT 'Allenatore',
             level TEXT,
-            photo_url TEXT
+            photo_url TEXT,
+            dob_year INTEGER,
+            club TEXT
         )`);
 
         // Coach-Teams Junction Table
@@ -237,7 +254,9 @@ function initDb() {
             block_reach REAL,
             technical_skills TEXT,
             notes TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            cf TEXT,
+            med_cert_expiry DATE
         )`);
 
         // Seed Admin User if not exists

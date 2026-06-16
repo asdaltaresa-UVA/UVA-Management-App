@@ -149,19 +149,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Init App ---
     async function initApp() {
         await loadInitialData();
+        renderClubsHub();
         navigateTo('hub');
     }
 
     async function loadInitialData() {
         try {
-            const [athletesRes, teamsRes, newsRes, fieldsRes, perfsRes, coachesRes, scoutingRes] = await Promise.all([
+            const [athletesRes, teamsRes, newsRes, fieldsRes, perfsRes, coachesRes, scoutingRes, clubsRes] = await Promise.all([
                 api.getAthletes(),
                 api.getTeams(),
                 api.getNews(),
                 api.getDynamicFields(),
                 api.getPerformances(),
                 api.getCoaches(),
-                api.getScouting()
+                api.getScouting(),
+                api.getClubs()
             ]);
             state.athletes = athletesRes || [];
             state.teams = teamsRes || [];
@@ -170,9 +172,45 @@ document.addEventListener('DOMContentLoaded', () => {
             state.performances = perfsRes || [];
             state.coaches = coachesRes || [];
             state.scouting = scoutingRes || [];
+            state.clubs = clubsRes || [];
         } catch (err) {
             console.error('Error loading data', err);
         }
+    }
+
+    function renderClubsHub() {
+        const grid = document.getElementById('hub-clubs-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        state.clubs.forEach(club => {
+            const div = document.createElement('div');
+            div.className = 'card text-center club-btn';
+            div.style = 'cursor: pointer; padding: 20px; transition: transform 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px;';
+            div.innerHTML = `
+                <h2 style="color: var(--primary-color); margin-bottom: 10px;">${club.name}</h2>
+                <div style="color: #ccc; font-size: 14px;">
+                    ${club.president ? `Presidente: ${club.president}<br>` : ''}
+                    ${club.city ? `${club.city}` : ''}
+                </div>
+            `;
+            div.addEventListener('click', () => {
+                state.selectedClub = club.name;
+                document.getElementById('sidebar-club-name').textContent = club.name.toUpperCase();
+                document.getElementById('main-sidebar').style.display = 'flex';
+                
+                const filterTeam = document.getElementById('filter-team');
+                if (filterTeam) {
+                    filterTeam.innerHTML = '<option value="">Tutte le Squadre</option>';
+                    state.teams.filter(t => t.club === club.name).forEach(t => {
+                        filterTeam.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+                    });
+                }
+                
+                navigateTo('dashboard');
+            });
+            grid.appendChild(div);
+        });
     }
 
     // --- Dashboard Stats ---
@@ -193,12 +231,78 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elAvgRating) elAvgRating.textContent = '7.4';
 
         const newsContainer = document.getElementById('dashboard-news-list');
-        newsContainer.innerHTML = state.news.slice(0, 3).map(n => `
-            <div class="news-item" style="border-left-color: ${n.is_external ? '#3b5998' : 'var(--primary-color)'}">
-                <div class="news-meta">${new Date(n.created_at).toLocaleDateString()} - ${n.author || 'Social'}</div>
-                <div class="news-title">${n.title}</div>
-            </div>
-        `).join('');
+        if (newsContainer) {
+            newsContainer.innerHTML = state.news.slice(0, 3).map(n => `
+                <div class="news-item" style="border-left-color: ${n.is_external ? '#3b5998' : 'var(--primary-color)'}">
+                    <div class="news-meta">${new Date(n.created_at).toLocaleDateString()} - ${n.author || 'Social'}</div>
+                    <div class="news-title">${n.title}</div>
+                </div>
+            `).join('');
+        }
+
+        // Compleanni del Mese
+        const birthdaysContainer = document.getElementById('dashboard-birthdays');
+        if (birthdaysContainer) {
+            const currentMonth = new Date().getMonth();
+            const birthdays = clubAthletes.filter(a => {
+                if (!a.dob) return false;
+                const d = new Date(a.dob);
+                return d.getMonth() === currentMonth;
+            }).sort((a, b) => new Date(a.dob).getDate() - new Date(b.dob).getDate());
+            
+            if (birthdays.length === 0) {
+                birthdaysContainer.innerHTML = '<p style="color:#aaa; padding: 10px;">Nessun compleanno questo mese.</p>';
+            } else {
+                birthdaysContainer.innerHTML = birthdays.map(a => {
+                    const day = new Date(a.dob).getDate();
+                    return `
+                    <div class="news-item" style="border-left-color: #f39c12; margin-bottom: 5px;">
+                        <div class="news-title">${day} - <strong>${a.first_name} ${a.last_name}</strong></div>
+                        <div class="news-meta">${a.teams && a.teams.length > 0 ? a.teams[0].name : ''}</div>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        // Scadenze Visite (30 giorni o scadute)
+        const expiriesContainer = document.getElementById('dashboard-med-expiries');
+        if (expiriesContainer) {
+            const now = new Date();
+            const in30Days = new Date();
+            in30Days.setDate(now.getDate() + 30);
+            
+            const expiries = clubAthletes.filter(a => {
+                if (!a.med_cert_expiry) return true; // Mostra chi non l'ha inserito? No, solo chi sta scadendo. 
+                // Se non c'è, magari lo segnaliamo come "Mancante"
+                return true; 
+            }).map(a => {
+                let status = 'ok';
+                let dateStr = 'Mancante';
+                if (a.med_cert_expiry) {
+                    const exp = new Date(a.med_cert_expiry);
+                    dateStr = exp.toLocaleDateString();
+                    if (exp < now) status = 'scaduto';
+                    else if (exp <= in30Days) status = 'in_scadenza';
+                } else {
+                    status = 'mancante';
+                }
+                return { ...a, certStatus: status, dateStr };
+            }).filter(a => a.certStatus !== 'ok');
+
+            if (expiries.length === 0) {
+                expiriesContainer.innerHTML = '<p style="color:#aaa; padding: 10px;">Nessuna scadenza imminente.</p>';
+            } else {
+                expiriesContainer.innerHTML = expiries.map(a => {
+                    const color = a.certStatus === 'scaduto' ? '#c0392b' : (a.certStatus === 'mancante' ? '#7f8c8d' : '#e67e22');
+                    const label = a.certStatus === 'scaduto' ? 'Scaduto' : (a.certStatus === 'mancante' ? 'Mancante' : 'Scade a breve');
+                    return `
+                    <div class="news-item" style="border-left-color: ${color}; margin-bottom: 5px;">
+                        <div class="news-title"><strong>${a.first_name} ${a.last_name}</strong></div>
+                        <div class="news-meta" style="color: ${color};">${label}: ${a.dateStr}</div>
+                    </div>`;
+                }).join('');
+            }
+        }
 
         const radarsContainer = document.getElementById('dashboard-teams-radars');
         if (radarsContainer) {
@@ -335,11 +439,31 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const dobYear = a.dob ? new Date(a.dob).getFullYear() : 'N/D';
             const genderBadge = a.gender === 'M' ? '<span class="tag" style="background:#3b5998; color:#fff;">M</span>' : '<span class="tag" style="background:#e83e8c; color:#fff;">F</span>';
+            const cfText = a.cf ? a.cf : '<span style="color:#aaa; font-size: 12px;">N/D</span>';
+            
+            let medCertBadge = '<span style="color:#aaa; font-size: 12px;">N/D</span>';
+            if (a.med_cert_expiry) {
+                const exp = new Date(a.med_cert_expiry);
+                const now = new Date();
+                const in30Days = new Date();
+                in30Days.setDate(now.getDate() + 30);
+                
+                if (exp < now) {
+                    medCertBadge = `<span class="tag" style="background:#c0392b; color:#fff;">${exp.toLocaleDateString()} (Scaduta)</span>`;
+                } else if (exp <= in30Days) {
+                    medCertBadge = `<span class="tag" style="background:#e67e22; color:#fff;">${exp.toLocaleDateString()} (In scad.)</span>`;
+                } else {
+                    medCertBadge = `<span class="tag" style="background:#27ae60; color:#fff;">${exp.toLocaleDateString()}</span>`;
+                }
+            }
+
             tr.innerHTML = `
                 <td><strong>${a.last_name}</strong></td>
                 <td><strong>${a.first_name}</strong></td>
                 <td>${genderBadge}</td>
                 <td>${dobYear}</td>
+                <td>${cfText}</td>
+                <td>${medCertBadge}</td>
                 <td><span class="tag">${a.position || 'N/D'}</span></td>
                 <td>${teamsList}</td>
                 <td>
@@ -468,6 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><strong>${c.last_name}</strong></td>
                 <td><strong>${c.first_name}</strong></td>
                 <td>${c.dob_year || 'N/D'}</td>
+                <td><span class="tag">${c.role || 'Allenatore'}</span></td>
                 <td><span class="tag">${c.level || 'N/D'}</span></td>
                 <td>N/D</td>
                 <td>
@@ -482,10 +607,11 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', async (e) => {
                 const id = e.currentTarget.getAttribute('data-id');
                 const coach = state.coaches.find(c => c.id == id);
-                document.getElementById('modal-coach-title').textContent = 'Modifica Allenatore';
+                document.getElementById('modal-coach-title').textContent = 'Modifica Staff';
                 document.getElementById('f-coach-id').value = coach.id;
                 document.getElementById('f-coach-first-name').value = coach.first_name;
                 document.getElementById('f-coach-last-name').value = coach.last_name;
+                document.getElementById('f-coach-role').value = coach.role || 'Allenatore';
                 document.getElementById('f-coach-level').value = coach.level || '';
                 document.getElementById('f-coach-dob-year').value = coach.dob_year || '';
                 document.getElementById('modal-coach').classList.add('active');
@@ -682,6 +808,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('team-detail-coach').textContent = team.coach || 'N/D';
         document.getElementById('team-detail-manager').textContent = team.manager || 'N/D';
         
+        let scorerEl = document.getElementById('team-detail-scorer');
+        if (!scorerEl) {
+            // Append dynamically since it might not be in HTML yet
+            const dtEl = document.querySelector('#view-team-detail .data-list');
+            if (dtEl) {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>Refertista</span><strong id="team-detail-scorer">N/D</strong>`;
+                dtEl.appendChild(li);
+                scorerEl = document.getElementById('team-detail-scorer');
+            }
+        }
+        if (scorerEl) scorerEl.textContent = team.scorer || 'N/D';
+        
         const btnEditTeamDetail = document.getElementById('btn-edit-team-detail');
         if (btnEditTeamDetail) {
             // Remove old listeners by cloning
@@ -692,8 +831,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('f-team-id').value = team.id;
                 document.getElementById('f-team-name').value = team.name;
                 document.getElementById('f-team-category').value = team.category;
+                populateTeamStaffSelects();
                 document.getElementById('f-team-coach').value = team.coach || '';
                 document.getElementById('f-team-manager').value = team.manager || '';
+                document.getElementById('f-team-scorer').value = team.scorer || '';
                 document.getElementById('modal-team').classList.add('active');
             });
         }
@@ -854,6 +995,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('f-size-hoodie').value = athlete ? athlete.size_hoodie || '' : '';
         document.getElementById('f-size-warmup').value = athlete ? athlete.size_warmup || '' : '';
 
+        // Nuovi Dati Anagrafici e Medici
+        document.getElementById('f-cf').value = athlete ? athlete.cf || '' : '';
+        document.getElementById('f-med-cert-expiry').value = athlete && athlete.med_cert_expiry ? athlete.med_cert_expiry.split('T')[0] : '';
+
         // Nuovi Dati Atletici e Tecnici
         document.getElementById('f-weight').value = athlete ? athlete.weight || '' : '';
         document.getElementById('f-height').value = athlete ? athlete.height || '' : '';
@@ -931,6 +1076,8 @@ document.addEventListener('DOMContentLoaded', () => {
             gender: document.getElementById('f-gender').value,
             position: document.getElementById('f-position').value,
             dob: document.getElementById('f-dob').value,
+            cf: document.getElementById('f-cf').value.toUpperCase(),
+            med_cert_expiry: document.getElementById('f-med-cert-expiry').value,
             size_shirt: document.getElementById('f-size-shirt').value,
             size_pants: document.getElementById('f-size-pants').value,
             size_hoodie: document.getElementById('f-size-hoodie').value,
@@ -987,6 +1134,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Team Modal Logic ---
+    function populateTeamStaffSelects() {
+        const coachSel = document.getElementById('f-team-coach');
+        const managerSel = document.getElementById('f-team-manager');
+        const scorerSel = document.getElementById('f-team-scorer');
+        
+        let coachesHtml = '<option value="">Seleziona Allenatore...</option>';
+        let managersHtml = '<option value="">Seleziona Dirigente...</option>';
+        let scorersHtml = '<option value="">Seleziona Refertista...</option>';
+        
+        const clubStaff = state.selectedClub ? state.coaches.filter(c => c.club === state.selectedClub) : state.coaches;
+        
+        clubStaff.forEach(s => {
+            const name = `${s.first_name} ${s.last_name}`;
+            if (s.role === 'Allenatore') coachesHtml += `<option value="${name}">${name}</option>`;
+            if (s.role === 'Dirigente') managersHtml += `<option value="${name}">${name}</option>`;
+            if (s.role === 'Refertista') scorersHtml += `<option value="${name}">${name}</option>`;
+        });
+        
+        if(coachSel) coachSel.innerHTML = coachesHtml;
+        if(managerSel) managerSel.innerHTML = managersHtml;
+        if(scorerSel) scorerSel.innerHTML = scorersHtml;
+    }
+
     const modalTeam = document.getElementById('modal-team');
     const btnAddTeam = document.getElementById('btn-add-team');
     const btnCloseTeamModal = document.getElementById('close-team-modal');
@@ -996,8 +1166,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('modal-team-title').textContent = 'Nuova Squadra';
             document.getElementById('f-team-id').value = '';
             document.getElementById('f-team-name').value = '';
+            populateTeamStaffSelects();
             document.getElementById('f-team-coach').value = '';
             document.getElementById('f-team-manager').value = '';
+            document.getElementById('f-team-scorer').value = '';
             modalTeam.classList.add('active');
         });
     }
@@ -1014,7 +1186,8 @@ document.addEventListener('DOMContentLoaded', () => {
             category: document.getElementById('f-team-category').value,
             club: state.selectedClub || 'UVA',
             coach: document.getElementById('f-team-coach').value,
-            manager: document.getElementById('f-team-manager').value
+            manager: document.getElementById('f-team-manager').value,
+            scorer: document.getElementById('f-team-scorer').value
         };
         
         try {
@@ -1038,10 +1211,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnAddCoach) {
         btnAddCoach.addEventListener('click', () => {
-            document.getElementById('modal-coach-title').textContent = 'Nuovo Allenatore';
+            document.getElementById('modal-coach-title').textContent = 'Nuovo Staff';
             document.getElementById('f-coach-id').value = '';
             document.getElementById('f-coach-first-name').value = '';
             document.getElementById('f-coach-last-name').value = '';
+            document.getElementById('f-coach-role').value = 'Allenatore';
             document.getElementById('f-coach-level').value = '';
             document.getElementById('f-coach-dob-year').value = '';
             modalCoach.classList.add('active');
@@ -1058,8 +1232,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             first_name: document.getElementById('f-coach-first-name').value,
             last_name: document.getElementById('f-coach-last-name').value,
+            role: document.getElementById('f-coach-role').value,
             level: document.getElementById('f-coach-level').value,
-            dob_year: document.getElementById('f-coach-dob-year').value ? parseInt(document.getElementById('f-coach-dob-year').value) : null
+            dob_year: document.getElementById('f-coach-dob-year').value ? parseInt(document.getElementById('f-coach-dob-year').value) : null,
+            club: state.selectedClub
         };
         
         try {
@@ -1110,11 +1286,31 @@ document.addEventListener('DOMContentLoaded', () => {
         
         filtered.forEach(s => {
             const tr = document.createElement('tr');
-            const dobYear = s.dob ? new Date(s.dob).getFullYear() : 'N/D';
+            const dobYear = s.dob ? new Date(s.dob).getFullYear() : (s.dob_year || 'N/D');
+            const cfText = s.cf ? s.cf : '<span style="color:#aaa; font-size: 12px;">N/D</span>';
+            
+            let medCertBadge = '<span style="color:#aaa; font-size: 12px;">N/D</span>';
+            if (s.med_cert_expiry) {
+                const exp = new Date(s.med_cert_expiry);
+                const now = new Date();
+                const in30Days = new Date();
+                in30Days.setDate(now.getDate() + 30);
+                
+                if (exp < now) {
+                    medCertBadge = `<span class="tag" style="background:#c0392b; color:#fff;">${exp.toLocaleDateString()} (Scaduta)</span>`;
+                } else if (exp <= in30Days) {
+                    medCertBadge = `<span class="tag" style="background:#e67e22; color:#fff;">${exp.toLocaleDateString()} (In scad.)</span>`;
+                } else {
+                    medCertBadge = `<span class="tag" style="background:#27ae60; color:#fff;">${exp.toLocaleDateString()}</span>`;
+                }
+            }
+            
             tr.innerHTML = `
                 <td><strong>${s.last_name}</strong></td>
                 <td><strong>${s.first_name}</strong></td>
                 <td>${dobYear}</td>
+                <td>${cfText}</td>
+                <td>${medCertBadge}</td>
                 <td><span class="tag">${s.position || 'N/D'}</span></td>
                 <td>${s.current_club || 'N/D'}</td>
                 <td>${s.owned_club || 'N/D'}</td>
@@ -1141,7 +1337,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('fs-id').value = scout.id;
                 document.getElementById('fs-first-name').value = scout.first_name;
                 document.getElementById('fs-last-name').value = scout.last_name;
-                document.getElementById('fs-dob-year').value = scout.dob ? new Date(scout.dob).getFullYear() : '';
+                document.getElementById('fs-dob-year').value = scout.dob ? new Date(scout.dob).getFullYear() : (scout.dob_year || '');
+                document.getElementById('fs-cf').value = scout.cf || '';
+                document.getElementById('fs-med-cert-expiry').value = scout.med_cert_expiry ? scout.med_cert_expiry.split('T')[0] : '';
                 document.getElementById('fs-position').value = scout.position || '';
                 document.getElementById('fs-current-club').value = scout.current_club || '';
                 document.getElementById('fs-owned-club').value = scout.owned_club || '';
@@ -1183,6 +1381,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('fs-first-name').value = '';
             document.getElementById('fs-last-name').value = '';
             document.getElementById('fs-dob-year').value = '';
+            document.getElementById('fs-cf').value = '';
+            document.getElementById('fs-med-cert-expiry').value = '';
             document.getElementById('fs-position').value = '';
             document.getElementById('fs-current-club').value = '';
             document.getElementById('fs-owned-club').value = '';
@@ -1212,7 +1412,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('first_name', document.getElementById('fs-first-name').value);
                 formData.append('last_name', document.getElementById('fs-last-name').value);
                 const dobY = document.getElementById('fs-dob-year').value;
-                if (dobY) formData.append('dob', `${dobY}-01-01`);
+                if (dobY) formData.append('dob_year', dobY);
+                formData.append('cf', document.getElementById('fs-cf').value.toUpperCase());
+                formData.append('med_cert_expiry', document.getElementById('fs-med-cert-expiry').value);
                 formData.append('position', document.getElementById('fs-position').value);
                 formData.append('current_club', document.getElementById('fs-current-club').value);
                 formData.append('owned_club', document.getElementById('fs-owned-club').value);
@@ -1425,24 +1627,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Club Hub Selection ---
-    document.querySelectorAll('.club-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const club = e.currentTarget.getAttribute('data-club');
-            state.selectedClub = club;
-            document.getElementById('sidebar-club-name').textContent = club.toUpperCase();
-            document.getElementById('main-sidebar').style.display = 'flex';
-            
-            const filterTeam = document.getElementById('filter-team');
-            filterTeam.innerHTML = '<option value="">Tutte le Squadre</option>';
-            state.teams.filter(t => t.club === club).forEach(t => {
-                filterTeam.innerHTML += `<option value="${t.id}">${t.name}</option>`;
-            });
-            
-            navigateTo('dashboard');
+    // --- Club Modal Logic ---
+    const btnAddClub = document.getElementById('btn-add-club');
+    if (btnAddClub) {
+        btnAddClub.addEventListener('click', () => {
+            document.getElementById('form-club').reset();
+            document.getElementById('fc-id').value = '';
+            document.getElementById('modal-club').classList.add('active');
         });
-    });
+    }
 
+    const closeClubModal = document.getElementById('close-club-modal');
+    if (closeClubModal) {
+        closeClubModal.addEventListener('click', () => document.getElementById('modal-club').classList.remove('active'));
+    }
+
+    const formClub = document.getElementById('form-club');
+    if (formClub) {
+        formClub.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('fc-id').value;
+            const data = {
+                name: document.getElementById('fc-name').value,
+                address: document.getElementById('fc-address').value,
+                city: document.getElementById('fc-city').value,
+                vat: document.getElementById('fc-vat').value,
+                cf: document.getElementById('fc-cf').value,
+                president: document.getElementById('fc-president').value
+            };
+            
+            try {
+                if (id) {
+                    // Update club non implementato ancora nel form, ma pronto se servirà
+                } else {
+                    await api.createClub(JSON.stringify(data));
+                }
+                document.getElementById('modal-club').classList.remove('active');
+                await loadInitialData();
+                renderClubsHub();
+            } catch (err) {
+                alert('Errore salvataggio società: ' + err.message);
+            }
+        });
+    }
+
+    // --- Sidebar Navigation from Hub ---
     document.getElementById('btn-back-hub').addEventListener('click', () => {
         state.selectedClub = null;
         document.getElementById('main-sidebar').style.display = 'none';

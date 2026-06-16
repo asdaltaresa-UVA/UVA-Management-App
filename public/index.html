@@ -51,7 +51,7 @@
                 <li><a href="#" class="nav-item active" data-target="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
                 <li><a href="#" class="nav-item" data-target="teams"><i class="fas fa-users"></i> Squadre</a></li>
                 <li><a href="#" class="nav-item" data-target="athletes"><i class="fas fa-running"></i> Atleti</a></li>
-                <li><a href="#" class="nav-item" data-target="coaches"><i class="fas fa-user-tie"></i> Allenatori</a></li>
+                <li><a href="#" class="nav-item" data-target="coaches"><i class="fas fa-id-badge"></i> Staff & Dirigenti</a></li>
                 <li><a href="#" class="nav-item" data-target="scouting"><i class="fas fa-eye"></i> Osservatorio</a></li>
                 <li><a href="#" class="nav-item" data-target="news"><i class="fas fa-newspaper"></i> News & Social</a></li>
                 <li><a href="#" class="nav-item" data-target="settings"><i class="fas fa-cog"></i> Impostazioni</a></li>
@@ -84,19 +84,11 @@
                         <h1 style="font-size: 3rem; color: var(--primary-color);">UNION VOLLEY ACADEMY</h1>
                         <p style="color: #aaa; font-size: 1.2rem;">Seleziona la società per accedere all'area gestionale</p>
                     </div>
-                    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 30px; max-width: 900px; margin: 0 auto;">
-                        <div class="card text-center club-btn" data-club="Alta Resa" style="cursor: pointer; padding: 20px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; height: 300px;">
-                            <img src="images/alta_resa.png" alt="Alta Resa" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                        </div>
-                        <div class="card text-center club-btn" data-club="Blu Volley PN" style="cursor: pointer; padding: 20px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; height: 300px;">
-                            <img src="images/blu_volley.png" alt="Blu Volley" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                        </div>
-                        <div class="card text-center club-btn" data-club="Roveredo" style="cursor: pointer; padding: 20px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; height: 300px;">
-                            <img src="images/roveredo.png" alt="Roveredo" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                        </div>
-                        <div class="card text-center club-btn" data-club="San Quirino" style="cursor: pointer; padding: 20px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; height: 300px;">
-                            <img src="images/san_quirino.jpg" alt="San Quirino" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                        </div>
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <button id="btn-add-club" class="btn btn-primary"><i class="fas fa-plus"></i> Nuova Società</button>
+                    </div>
+                    <div id="hub-clubs-grid" class="grid" style="grid-template-columns: 1fr 1fr; gap: 30px; max-width: 900px; margin: 0 auto;">
+                        <!-- JS populated -->
                     </div>
                 </div>
 
@@ -134,7 +126,19 @@
                                 <!-- Radars injected here -->
                             </div>
                         </div>
-                        <div class="card news-card">
+                        <div class="card" style="border-left: 4px solid #f39c12;">
+                            <h2><i class="fas fa-birthday-cake"></i> Compleanni del Mese</h2>
+                            <div id="dashboard-birthdays" class="news-list" style="max-height: 250px; overflow-y: auto;">
+                                <!-- Birthdays injected here -->
+                            </div>
+                        </div>
+                        <div class="card" style="border-left: 4px solid #e74c3c;">
+                            <h2><i class="fas fa-notes-medical"></i> Scadenze Visite (30gg)</h2>
+                            <div id="dashboard-med-expiries" class="news-list" style="max-height: 250px; overflow-y: auto;">
+                                <!-- Expiries injected here -->
+                            </div>
+                        </div>
+                        <div class="card news-card" style="grid-column: 1 / -1;">
                             <h2>Ultime News</h2>
                             <div id="dashboard-news-list" class="news-list">
                                 <!-- News injected here -->
@@ -173,6 +177,8 @@
                                     <th class="sortable-header" data-sort="first_name" style="cursor:pointer;">Nome <i class="fas fa-sort"></i></th>
                                     <th class="sortable-header" data-sort="gender" style="cursor:pointer;">M/F <i class="fas fa-sort"></i></th>
                                     <th class="sortable-header" data-sort="dob" style="cursor:pointer;">Anno <i class="fas fa-sort"></i></th>
+                                    <th>CF</th>
+                                    <th>Scadenza Visita</th>
                                     <th class="sortable-header" data-sort="position" style="cursor:pointer;">Ruolo <i class="fas fa-sort"></i></th>
                                     <th>Squadre</th>
                                     <th>Azioni</th>
@@ -407,6 +413,8 @@
                                     <th>Cognome</th>
                                     <th>Nome</th>
                                     <th>Anno</th>
+                                    <th>CF</th>
+                                    <th>Scadenza Visita</th>
                                     <th>Ruolo</th>
                                     <th>Società (Gioca)</th>
                                     <th>Società (Cartellino)</th>
@@ -509,6 +517,50 @@
         </main>
     </div>
 
+    <!-- Modal Nuova Società -->
+    <div id="modal-club" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 id="modal-club-title">Nuova Società</h3>
+                <span class="close-modal" id="close-club-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-club">
+                    <input type="hidden" id="fc-id">
+                    <div class="form-group">
+                        <label>Denominazione Società</label>
+                        <input type="text" id="fc-name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Indirizzo Sede</label>
+                            <input type="text" id="fc-address">
+                        </div>
+                        <div class="form-group">
+                            <label>Città</label>
+                            <input type="text" id="fc-city">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>P.IVA</label>
+                            <input type="text" id="fc-vat">
+                        </div>
+                        <div class="form-group">
+                            <label>Codice Fiscale</label>
+                            <input type="text" id="fc-cf">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Presidente</label>
+                        <input type="text" id="fc-president">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="btn-save-club">Salva Società</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Modals -->
     <!-- Athlete Form Modal -->
     <div id="modal-athlete" class="modal">
@@ -538,6 +590,16 @@
                         <div class="form-group">
                             <label>Data di Nascita</label>
                             <input type="date" id="f-dob">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:2;">
+                            <label>Codice Fiscale</label>
+                            <input type="text" id="f-cf" style="text-transform: uppercase;" maxlength="16">
+                        </div>
+                        <div class="form-group" style="flex:2;">
+                            <label>Scadenza Visita Medica</label>
+                            <input type="date" id="f-med-cert-expiry">
                         </div>
                         <div class="form-group">
                             <label>Genere</label>
@@ -684,13 +746,23 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Allenatore (Testo per ora)</label>
-                            <input type="text" id="f-team-coach" placeholder="Nome Allenatore">
+                            <label>Allenatore</label>
+                            <select id="f-team-coach" class="form-select">
+                                <option value="">Seleziona Allenatore...</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label>Dirigente</label>
-                            <input type="text" id="f-team-manager">
+                            <select id="f-team-manager" class="form-select">
+                                <option value="">Seleziona Dirigente...</option>
+                            </select>
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Refertista</label>
+                        <select id="f-team-scorer" class="form-select">
+                            <option value="">Seleziona Refertista...</option>
+                        </select>
                     </div>
                     <button type="submit" class="btn btn-primary w-100" id="btn-save-team">Salva Squadra</button>
                 </form>
@@ -718,17 +790,26 @@
                             <input type="text" id="f-coach-last-name" required>
                         </div>
                     </div>
+                    </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Livello (Allievo, 1° Grado, etc.)</label>
-                            <input type="text" id="f-coach-level">
+                            <label>Ruolo</label>
+                            <select id="f-coach-role" class="form-select">
+                                <option value="Allenatore">Allenatore</option>
+                                <option value="Dirigente">Dirigente</option>
+                                <option value="Refertista">Refertista</option>
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label>Anno di nascita</label>
-                            <input type="number" id="f-coach-dob-year" placeholder="Es. 1980">
+                            <label>Livello (Es. 1° Grado)</label>
+                            <input type="text" id="f-coach-level">
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100" id="btn-save-coach">Salva Allenatore</button>
+                    <div class="form-group">
+                        <label>Anno di nascita</label>
+                        <input type="number" id="f-coach-dob-year" placeholder="Es. 1980">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="btn-save-coach">Salva Staff</button>
                 </form>
             </div>
         </div>
@@ -762,6 +843,16 @@
                         <div class="form-group">
                             <label>Anno di Nascita</label>
                             <input type="number" id="fs-dob-year">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:2;">
+                            <label>Codice Fiscale</label>
+                            <input type="text" id="fs-cf" style="text-transform: uppercase;" maxlength="16">
+                        </div>
+                        <div class="form-group" style="flex:2;">
+                            <label>Scadenza Visita Medica</label>
+                            <input type="date" id="fs-med-cert-expiry">
                         </div>
                     </div>
                     <div class="form-row">

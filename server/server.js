@@ -107,13 +107,14 @@ app.post('/api/athletes', authenticateToken, upload.single('photo'), (req, res) 
     const r = data.reach === '' ? null : data.reach;
     const sr = data.spike_reach === '' ? null : data.spike_reach;
     const br = data.block_reach === '' ? null : data.block_reach;
+    const med_cert_expiry = data.med_cert_expiry === '' ? null : data.med_cert_expiry;
 
-    const sql = `INSERT INTO athletes (first_name, last_name, dob, gender, position, status, photo_url, height, weight, reach, spike_reach, block_reach, notes, size_shirt, size_pants, size_hoodie, size_warmup, technical_skills, dominant_arm) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const sql = `INSERT INTO athletes (first_name, last_name, dob, gender, position, status, photo_url, height, weight, reach, spike_reach, block_reach, notes, size_shirt, size_pants, size_hoodie, size_warmup, technical_skills, dominant_arm, cf, med_cert_expiry) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     const params = [
         data.first_name, data.last_name, data.dob, data.gender || 'F', data.position, data.status, 
         photoUrl, h, w, r, sr, br, data.notes,
-        data.size_shirt, data.size_pants, data.size_hoodie, data.size_warmup, data.technical_skills, data.dominant_arm
+        data.size_shirt, data.size_pants, data.size_hoodie, data.size_warmup, data.technical_skills, data.dominant_arm, data.cf, med_cert_expiry
     ];
     
     db.run(sql, params, function(err) {
@@ -148,12 +149,13 @@ app.put('/api/athletes/:id', authenticateToken, upload.single('photo'), (req, re
     const r = data.reach === '' ? null : data.reach;
     const sr = data.spike_reach === '' ? null : data.spike_reach;
     const br = data.block_reach === '' ? null : data.block_reach;
+    const med_cert_expiry = data.med_cert_expiry === '' ? null : data.med_cert_expiry;
 
-    let sql = `UPDATE athletes SET first_name=?, last_name=?, dob=?, gender=?, position=?, status=?, height=?, weight=?, reach=?, spike_reach=?, block_reach=?, notes=?, size_shirt=?, size_pants=?, size_hoodie=?, size_warmup=?, technical_skills=?, dominant_arm=?`;
+    let sql = `UPDATE athletes SET first_name=?, last_name=?, dob=?, gender=?, position=?, status=?, height=?, weight=?, reach=?, spike_reach=?, block_reach=?, notes=?, size_shirt=?, size_pants=?, size_hoodie=?, size_warmup=?, technical_skills=?, dominant_arm=?, cf=?, med_cert_expiry=?`;
     let params = [
         data.first_name, data.last_name, data.dob, data.gender || 'F', data.position, data.status || 'Tesserato', 
         h, w, r, sr, br, data.notes,
-        data.size_shirt, data.size_pants, data.size_hoodie, data.size_warmup, data.technical_skills, data.dominant_arm
+        data.size_shirt, data.size_pants, data.size_hoodie, data.size_warmup, data.technical_skills, data.dominant_arm, data.cf, med_cert_expiry
     ];
     
     if (req.file) {
@@ -200,16 +202,16 @@ app.get('/api/teams', authenticateToken, (req, res) => {
 });
 
 app.post('/api/teams', authenticateToken, (req, res) => {
-    const { name, category, club, coach, manager, starting_six } = req.body;
-    db.run("INSERT INTO teams (name, category, club, coach, manager, starting_six) VALUES (?, ?, ?, ?, ?, ?)", 
-           [name, category, club, coach, manager, starting_six], function(err) {
+    const { name, category, club, coach, manager, scorer, starting_six } = req.body;
+    db.run("INSERT INTO teams (name, category, club, coach, manager, scorer, starting_six) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+           [name, category, club, coach, manager, scorer, starting_six], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ id: this.lastID });
     });
 });
 
 app.put('/api/teams/:id', authenticateToken, (req, res) => {
-    const { name, category, club, coach, manager, starting_six } = req.body;
+    const { name, category, club, coach, manager, scorer, starting_six } = req.body;
     let sql = "UPDATE teams SET ";
     let params = [];
     if (name !== undefined) { sql += "name=?, "; params.push(name); }
@@ -217,6 +219,7 @@ app.put('/api/teams/:id', authenticateToken, (req, res) => {
     if (club !== undefined) { sql += "club=?, "; params.push(club); }
     if (coach !== undefined) { sql += "coach=?, "; params.push(coach); }
     if (manager !== undefined) { sql += "manager=?, "; params.push(manager); }
+    if (scorer !== undefined) { sql += "scorer=?, "; params.push(scorer); }
     if (starting_six !== undefined) { sql += "starting_six=?, "; params.push(starting_six); }
     
     // remove trailing comma and space
@@ -293,18 +296,18 @@ app.get('/api/coaches', authenticateToken, (req, res) => {
 });
 
 app.post('/api/coaches', authenticateToken, (req, res) => {
-    const { first_name, last_name, level, dob_year } = req.body;
-    db.run("INSERT INTO coaches (first_name, last_name, level, dob_year) VALUES (?, ?, ?, ?)",
-           [first_name, last_name, level, dob_year], function(err) {
+    const { first_name, last_name, role, level, dob_year, club } = req.body;
+    db.run("INSERT INTO coaches (first_name, last_name, role, level, dob_year, club) VALUES (?, ?, ?, ?, ?, ?)",
+           [first_name, last_name, role || 'Allenatore', level, dob_year, club], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ id: this.lastID });
     });
 });
 
 app.put('/api/coaches/:id', authenticateToken, (req, res) => {
-    const { first_name, last_name, level, dob_year } = req.body;
-    db.run("UPDATE coaches SET first_name=?, last_name=?, level=?, dob_year=? WHERE id=?",
-           [first_name, last_name, level, dob_year, req.params.id], function(err) {
+    const { first_name, last_name, role, level, dob_year, club } = req.body;
+    db.run("UPDATE coaches SET first_name=?, last_name=?, role=?, level=?, dob_year=?, club=? WHERE id=?",
+           [first_name, last_name, role || 'Allenatore', level, dob_year, club, req.params.id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, changes: this.changes });
     });
@@ -327,8 +330,8 @@ app.get('/api/scouting', authenticateToken, (req, res) => {
 
 app.post('/api/scouting', authenticateToken, (req, res) => {
     const d = req.body;
-    const sql = `INSERT INTO scouting_athletes (first_name, last_name, dob_year, position, current_club, owned_club, height, weight, reach, spike_reach, block_reach, technical_skills, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    const params = [d.first_name, d.last_name, d.dob_year, d.position, d.current_club, d.owned_club, d.height, d.weight, d.reach, d.spike_reach, d.block_reach, d.technical_skills, d.notes];
+    const sql = `INSERT INTO scouting_athletes (first_name, last_name, dob_year, position, current_club, owned_club, height, weight, reach, spike_reach, block_reach, technical_skills, notes, cf, med_cert_expiry) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const params = [d.first_name, d.last_name, d.dob_year, d.position, d.current_club, d.owned_club, d.height, d.weight, d.reach, d.spike_reach, d.block_reach, d.technical_skills, d.notes, d.cf, d.med_cert_expiry || null];
     db.run(sql, params, function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ id: this.lastID });
@@ -337,8 +340,8 @@ app.post('/api/scouting', authenticateToken, (req, res) => {
 
 app.put('/api/scouting/:id', authenticateToken, (req, res) => {
     const d = req.body;
-    const sql = `UPDATE scouting_athletes SET first_name=?, last_name=?, dob_year=?, position=?, current_club=?, owned_club=?, height=?, weight=?, reach=?, spike_reach=?, block_reach=?, technical_skills=?, notes=? WHERE id=?`;
-    const params = [d.first_name, d.last_name, d.dob_year, d.position, d.current_club, d.owned_club, d.height, d.weight, d.reach, d.spike_reach, d.block_reach, d.technical_skills, d.notes, req.params.id];
+    const sql = `UPDATE scouting_athletes SET first_name=?, last_name=?, dob_year=?, position=?, current_club=?, owned_club=?, height=?, weight=?, reach=?, spike_reach=?, block_reach=?, technical_skills=?, notes=?, cf=?, med_cert_expiry=? WHERE id=?`;
+    const params = [d.first_name, d.last_name, d.dob_year, d.position, d.current_club, d.owned_club, d.height, d.weight, d.reach, d.spike_reach, d.block_reach, d.technical_skills, d.notes, d.cf, d.med_cert_expiry || null, req.params.id];
     db.run(sql, params, function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, changes: this.changes });
@@ -349,6 +352,39 @@ app.delete('/api/scouting/:id', authenticateToken, (req, res) => {
     db.run("DELETE FROM scouting_athletes WHERE id = ?", [req.params.id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, changes: this.changes });
+    });
+});
+
+// --- Clubs Routes ---
+app.get('/api/clubs', authenticateToken, (req, res) => {
+    db.all("SELECT * FROM clubs ORDER BY name ASC", [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.post('/api/clubs', authenticateToken, (req, res) => {
+    const { name, address, city, vat, cf, president } = req.body;
+    db.run("INSERT INTO clubs (name, address, city, vat, cf, president) VALUES (?, ?, ?, ?, ?, ?)",
+        [name, address, city, vat, cf, president], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ id: this.lastID, name });
+    });
+});
+
+app.put('/api/clubs/:id', authenticateToken, (req, res) => {
+    const { name, address, city, vat, cf, president } = req.body;
+    db.run("UPDATE clubs SET name=?, address=?, city=?, vat=?, cf=?, president=? WHERE id=?",
+        [name, address, city, vat, cf, president, req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+app.delete('/api/clubs/:id', authenticateToken, (req, res) => {
+    db.run("DELETE FROM clubs WHERE id = ?", [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
     });
 });
 app.get('/api/backup', authenticateToken, (req, res) => {

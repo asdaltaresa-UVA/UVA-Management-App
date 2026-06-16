@@ -196,5 +196,17 @@ const api = {
         return this.request(`/scouting/${id}`, {
             method: 'DELETE'
         });
+    },
+
+    getClubs() {
+        return this.request('/clubs');
+    },
+
+    createClub(data) {
+        return this.request('/clubs', {
+            method: 'POST',
+            body: data,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 };
