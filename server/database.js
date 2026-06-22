@@ -61,6 +61,9 @@ if (isPg) {
                     if (typeof args[args.length - 1] === 'function') {
                         callback = args.pop();
                     }
+                    if (args.length === 1 && Array.isArray(args[0])) {
+                        args = args[0];
+                    }
                     db.run(sql, args, callback);
                 },
                 finalize: () => {}

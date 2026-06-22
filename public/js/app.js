@@ -567,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.getElementById('coaches-tbody');
         tbody.innerHTML = '';
         
-        let clubCoaches = state.selectedClub ? state.coaches.filter(c => c.club === state.selectedClub) : state.coaches;
+        let clubCoaches = state.selectedClub ? state.coaches.filter(c => c.club === state.selectedClub || !c.club) : state.coaches;
         
         const filterTeamId = document.getElementById('filter-coach-team').value;
         const searchTerm = document.getElementById('search-coach').value.toLowerCase();
@@ -701,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `).join('');
 
                 // Draw Radar Chart
-                drawRadarChart(athletePerfs);
+                drawRadarChart(athlete, athletePerfs);
             };
 
             renderPerformances();
@@ -713,28 +713,44 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) { console.error(err); }
     }
 
-    function drawRadarChart(perfs) {
+    function drawRadarChart(athlete, perfs) {
         const ctx = document.getElementById('athleteRadarChart').getContext('2d');
         if (state.radarChartInstance) {
             state.radarChartInstance.destroy();
         }
 
-        let attacco = 0, battuta = 0, muro = 0, ricezione = 0, fisico = 0;
-        if (perfs.length > 0) {
+        let attacco = 0, battuta = 0, ricezione = 0, palleggio = 0, fisico = 0;
+        
+        // Try to get from technical skills first (manual votes)
+        let hasTechSkills = false;
+        try {
+            if (athlete && athlete.technical_skills) {
+                const ts = JSON.parse(athlete.technical_skills);
+                if (ts.attacco || ts.battuta || ts.bagher || ts.palleggio) {
+                    hasTechSkills = true;
+                    attacco = parseFloat(ts.attacco) || 0;
+                    battuta = parseFloat(ts.battuta) || 0;
+                    ricezione = parseFloat(ts.bagher) || 0; // mapping bagher to ricezione
+                    palleggio = parseFloat(ts.palleggio) || 0;
+                }
+            }
+        } catch(e) {}
+
+        // Fallback to perfs if no manual tech skills
+        if (!hasTechSkills && perfs.length > 0) {
             attacco = perfs.reduce((sum, p) => sum + p.attack_points, 0) / perfs.length;
             battuta = perfs.reduce((sum, p) => sum + p.aces, 0) / perfs.length;
-            muro = perfs.reduce((sum, p) => sum + p.blocks, 0) / perfs.length;
             ricezione = perfs.reduce((sum, p) => sum + p.reception_perfect, 0) / perfs.length;
-            fisico = 3; // Placeholder for physical condition rating
+            palleggio = perfs.reduce((sum, p) => sum + p.blocks, 0) / perfs.length; // mapping blocks to palleggio as fallback
         }
 
         state.radarChartInstance = new Chart(ctx, {
             type: 'radar',
             data: {
-                labels: ['Attacco', 'Battuta', 'Muro', 'Ricezione', 'Fisico'],
+                labels: ['Attacco', 'Battuta', 'Ricezione/Bagher', 'Palleggio', 'Fisico'],
                 datasets: [{
-                    label: 'Valori Medi',
-                    data: [attacco, battuta, muro, ricezione, fisico],
+                    label: 'Valori Tecnici',
+                    data: [attacco, battuta, ricezione, palleggio, fisico],
                     backgroundColor: 'rgba(0, 210, 106, 0.2)',
                     borderColor: 'rgba(0, 210, 106, 1)',
                     pointBackgroundColor: '#fff',
@@ -1143,7 +1159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let managersHtml = '<option value="">Seleziona Dirigente...</option>';
         let scorersHtml = '<option value="">Seleziona Refertista...</option>';
         
-        const clubStaff = state.selectedClub ? state.coaches.filter(c => c.club === state.selectedClub) : state.coaches;
+        const clubStaff = state.selectedClub ? state.coaches.filter(c => c.club === state.selectedClub || !c.club) : state.coaches;
         
         clubStaff.forEach(s => {
             const name = `${s.first_name} ${s.last_name}`;
